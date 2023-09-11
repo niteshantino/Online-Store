@@ -7,10 +7,10 @@ import { Select } from "antd";
 const Products = () => {
   const [isFiltered, setIsFiltered] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
-  const [prods, setProds] = useState(isFiltered ? filteredData : []);
+  const [searchedData, setSearchedData] = useState([]);
+  const [prods, setProds] = useState([]);
   const [input, setInput] = useState("");
   const category = [
-    "filter by category",
     "smartphones",
     "laptops",
     "fragrances",
@@ -41,30 +41,51 @@ const Products = () => {
   const handleFilter = async (value) => {
     const res = await axios.get(
       `https://dummyjson.com/products/category/${value}`
-    ); 
+    );
     setFilteredData(res.data.products);
-    setProds(filteredData);
+    if (filteredData) {
+      setIsFiltered(true);
+    }
+    setProds(res.data.products);
   };
   const getAllData = async () => {
     const response = await axios.get(`https://dummyjson.com/products`);
     setProds(response.data.products);
   };
   const getSearchedData = async (input) => {
-    const data = await axios.get(
-      `https://dummyjson.com/products/search?q=${input}`
-    );
-    setProds(data.data.products);
+    // console.log(filteredData);
+    if (isFiltered) {
+      const res = filteredData.filter((el) =>
+        el.title.toLowerCase().includes(input.toLowerCase())
+      );
+      setSearchedData(res);
+      setProds(searchedData);
+    } else {
+      const data = await axios.get(
+        `https://dummyjson.com/products/search?q=${input}`
+      );
+      setProds(data.data.products);
+    }
   };
+  // if (isFiltered) {
+  //   if (input === "") {
+  //     setProds(filteredData);
+  //   }
+  // }
   const openProduct = (id) => {
     navigate(`/products/${id}`);
   };
+
   useEffect(() => {
     if (input) {
       getSearchedData(input);
+    } else if (isFiltered) {
+      setProds(filteredData);
     } else {
+      // If no filters are applied, get all data
       getAllData();
     }
-  }, [input]);
+  }, [input, filteredData]);
 
   return (
     <div>
